@@ -81,7 +81,7 @@
 
 ;; Exchange rate management
 (define-map exchange-history
-  { stacks-block-height: uint }
+  { block-height: uint }
   {
     old-rate: uint,
     new-rate: uint,
@@ -420,7 +420,7 @@
     (var-set exchange-rate new-rate)
     
     ;; Record exchange rate change
-    (map-set exchange-history { stacks-block-height: stacks-block-height } {
+    (map-set exchange-history { block-height: stacks-block-height } {
       old-rate: old-rate,
       new-rate: new-rate,
       changed-by: caller,
@@ -479,4 +479,3 @@
 (define-read-only (get-transaction (tx-id uint))
   (map-get? transaction-history { tx-id: tx-id })
 )
-

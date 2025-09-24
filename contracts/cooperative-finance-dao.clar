@@ -198,7 +198,7 @@
     (asserts! (is-none existing-member) ERR-NOT-AUTHORIZED)
     
     (map-set dao-members caller {
-      voting-power: (calculate-voting-power caller),
+      voting-power: u1,
       membership-level: membership-level,
       joined-at: stacks-block-height,
       total-votes-cast: u0,
@@ -628,4 +628,3 @@
     current-interest-rate: (var-get loan-interest-rate)
   }
 )
-
