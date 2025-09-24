@@ -81,7 +81,7 @@
 
 ;; Exchange rate management
 (define-map exchange-history
-  { block-height: uint }
+  { stacks-block-height: uint }
   {
     old-rate: uint,
     new-rate: uint,
@@ -131,7 +131,7 @@
     
     (map-set community-members caller {
       balance: u0,
-      joined-at: block-height,
+      joined-at: stacks-block-height,
       is-active: true,
       reputation-score: u1,
       total-contributions: u0,
@@ -171,7 +171,7 @@
       to: recipient,
       amount: amount,
       tx-type: "mint",
-      timestamp: block-height,
+      timestamp: stacks-block-height,
       memo: memo
     })
     
@@ -217,7 +217,7 @@
       to: recipient,
       amount: amount,
       tx-type: "transfer",
-      timestamp: block-height,
+      timestamp: stacks-block-height,
       memo: memo
     })
     
@@ -239,7 +239,7 @@
   )
     (asserts! (is-some (map-get? community-members caller)) ERR-MEMBER-NOT-FOUND)
     (asserts! (> amount-needed u0) ERR-INVALID-AMOUNT)
-    (asserts! (> deadline block-height) ERR-INVALID-AMOUNT)
+    (asserts! (> deadline stacks-block-height) ERR-INVALID-AMOUNT)
     
     (map-set mutual-aid-requests { request-id: request-id } {
       requester: caller,
@@ -248,7 +248,7 @@
       amount-needed: amount-needed,
       amount-fulfilled: u0,
       status: "open",
-      created-at: block-height,
+      created-at: stacks-block-height,
       deadline: deadline,
       contributors: (list),
       contribution-amounts: (list)
@@ -420,11 +420,11 @@
     (var-set exchange-rate new-rate)
     
     ;; Record exchange rate change
-    (map-set exchange-history { block-height: block-height } {
+    (map-set exchange-history { stacks-block-height: stacks-block-height } {
       old-rate: old-rate,
       new-rate: new-rate,
       changed-by: caller,
-      timestamp: block-height
+      timestamp: stacks-block-height
     })
     
     (ok new-rate)
@@ -479,3 +479,4 @@
 (define-read-only (get-transaction (tx-id uint))
   (map-get? transaction-history { tx-id: tx-id })
 )
+

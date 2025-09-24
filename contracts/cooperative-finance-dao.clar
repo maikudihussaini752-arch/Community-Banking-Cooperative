@@ -200,7 +200,7 @@
     (map-set dao-members caller {
       voting-power: (calculate-voting-power caller),
       membership-level: membership-level,
-      joined-at: block-height,
+      joined-at: stacks-block-height,
       total-votes-cast: u0,
       total-proposals-made: u0,
       reputation-score: u10,
@@ -223,8 +223,9 @@
   (let (
     (proposer tx-sender)
     (proposal-id (var-get proposal-counter))
-    (voting-ends (+ block-height VOTING-PERIOD))
-    (quorum (max (/ (var-get total-members) u3) MIN-VOTE-THRESHOLD))
+    (voting-ends (+ stacks-block-height VOTING-PERIOD))
+    (quorum (let ((calc-quorum (/ (var-get total-members) u3)))
+              (if (> calc-quorum MIN-VOTE-THRESHOLD) calc-quorum MIN-VOTE-THRESHOLD)))
   )
     (asserts! (is-some (map-get? dao-members proposer)) ERR-MEMBER-NOT-ELIGIBLE)
     (asserts! (get is-eligible (unwrap! (map-get? dao-members proposer) ERR-MEMBER-NOT-ELIGIBLE)) ERR-MEMBER-NOT-ELIGIBLE)
@@ -236,7 +237,7 @@
       description: description,
       amount-requested: amount-requested,
       recipient: recipient,
-      created-at: block-height,
+      created-at: stacks-block-height,
       voting-ends-at: voting-ends,
       status: "active",
       yes-votes: u0,
@@ -274,7 +275,7 @@
     (voting-power (calculate-voting-power voter))
   )
     (asserts! (is-none existing-vote) ERR-ALREADY-VOTED)
-    (asserts! (<= block-height (get voting-ends-at proposal)) ERR-VOTING-CLOSED)
+    (asserts! (<= stacks-block-height (get voting-ends-at proposal)) ERR-VOTING-CLOSED)
     (asserts! (get is-eligible member-data) ERR-MEMBER-NOT-ELIGIBLE)
     (asserts! (is-eq (get status proposal) "active") ERR-VOTING-CLOSED)
     
@@ -282,7 +283,7 @@
     (map-set proposal-votes { proposal-id: proposal-id, voter: voter } {
       vote: vote,
       voting-power: voting-power,
-      timestamp: block-height,
+      timestamp: stacks-block-height,
       rationale: rationale
     })
     
@@ -318,7 +319,7 @@
     (proposal (unwrap! (map-get? governance-proposals { proposal-id: proposal-id }) ERR-PROPOSAL-NOT-FOUND))
     (executor tx-sender)
   )
-    (asserts! (> block-height (get voting-ends-at proposal)) ERR-VOTING-CLOSED)
+    (asserts! (> stacks-block-height (get voting-ends-at proposal)) ERR-VOTING-CLOSED)
     (asserts! (has-reached-quorum proposal-id) ERR-MINIMUM-THRESHOLD-NOT-MET)
     (asserts! (> (get yes-votes proposal) (get no-votes proposal)) ERR-MINIMUM-THRESHOLD-NOT-MET)
     
@@ -382,7 +383,7 @@
       term-length: term-length,
       monthly-payment: monthly-payment,
       status: "pending",
-      created-at: block-height,
+      created-at: stacks-block-height,
       approved-at: none,
       funded-at: none,
       next-payment-due: none,
@@ -440,8 +441,8 @@
     (map-set loan-applications { loan-id: loan-id }
       (merge loan {
         status: "funded",
-        funded-at: (some block-height),
-        next-payment-due: (some (+ block-height u720)) ;; ~30 days
+        funded-at: (some stacks-block-height),
+        next-payment-due: (some (+ stacks-block-height u720)) ;; ~30 days
       })
     )
     
@@ -456,7 +457,7 @@
       to-account: (some (get borrower loan)),
       purpose: u"Loan disbursement",
       authorized-by: funder,
-      timestamp: block-height
+      timestamp: stacks-block-height
     })
     
     (var-set transaction-counter (+ (var-get transaction-counter) u1))
@@ -472,7 +473,7 @@
     (payment-number (+ (/ (get total-paid loan) (get monthly-payment loan)) u1))
   )
     (asserts! (is-eq borrower (get borrower loan)) ERR-NOT-AUTHORIZED)
-    (asserts! (is-eq (get status loan) "funded") ERR-LOAN_NOT_APPROVED)
+    (asserts! (is-eq (get status loan) "funded") ERR-LOAN-NOT-APPROVED)
     (asserts! (>= payment-amount (get monthly-payment loan)) ERR-INVALID-AMOUNT)
     
     ;; Calculate interest and principal
@@ -485,7 +486,7 @@
         amount: payment-amount,
         principal-amount: principal-portion,
         interest-amount: interest-portion,
-        paid-at: block-height,
+        paid-at: stacks-block-height,
         late-fee: u0
       })
       
@@ -498,7 +499,7 @@
           (merge loan {
             total-paid: new-total-paid,
             status: (if (>= new-total-paid total-owed) "repaid" "active"),
-            next-payment-due: (some (+ block-height u720))
+            next-payment-due: (some (+ stacks-block-height u720))
           })
         )
       )
@@ -526,7 +527,7 @@
   )
     (asserts! (is-some (map-get? dao-members proposer)) ERR-MEMBER-NOT-ELIGIBLE)
     (asserts! (> funding-goal u0) ERR-INVALID-AMOUNT)
-    (asserts! (> funding-deadline block-height) ERR-INVALID-AMOUNT)
+    (asserts! (> funding-deadline stacks-block-height) ERR-INVALID-AMOUNT)
     
     (map-set investment-opportunities { investment-id: investment-id } {
       proposer: proposer,
@@ -540,7 +541,7 @@
       status: "open",
       backers: (list),
       backer-amounts: (list),
-      created-at: block-height,
+      created-at: stacks-block-height,
       milestones: (list)
     })
     
@@ -557,7 +558,7 @@
   )
     (asserts! (is-some (map-get? dao-members investor)) ERR-MEMBER-NOT-ELIGIBLE)
     (asserts! (is-eq (get status investment) "open") ERR-VOTING-CLOSED)
-    (asserts! (>= (get funding-deadline investment) block-height) ERR-VOTING-CLOSED)
+    (asserts! (>= (get funding-deadline investment) stacks-block-height) ERR-VOTING-CLOSED)
     (asserts! (> investment-amount u0) ERR-INVALID-AMOUNT)
     
     (let (
@@ -627,3 +628,4 @@
     current-interest-rate: (var-get loan-interest-rate)
   }
 )
+
